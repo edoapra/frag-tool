@@ -81,12 +81,13 @@ subroutine get_jab(input, mol, error)
    real(wp), allocatable :: overlap(:, :), trans(:, :), wbo(:, :), abc(:, :)
    real(wp), allocatable :: orbital(:, :), scmat(:, :), fdim(:, :), scratch(:), efrag(:)
    integer, allocatable :: fragment(:)
+   integer :: nspin = 1
 
    call get_calculator(calc, mol, input%method, error)
    if (allocated(error)) return
 
    call new_wavefunction(wfn, mol%nat, calc%bas%nsh, calc%bas%nao, &
-      & input%etemp * ktoau)
+      & nspin, input%etemp * ktoau)
 
    call xtb_singlepoint(ctx, mol, calc, wfn, input%accuracy, energy, &
       & verbosity=input%verbosity-1)
@@ -105,7 +106,7 @@ subroutine get_jab(input, mol, error)
       fragment = input%fragment
    else
       allocate(wbo(mol%nat, mol%nat))
-      call get_wiberg_bondorder(calc%bas, overlap, wfn%density, wbo)
+      call get_wiberg_bondorder(calc%bas, overlap, wfn%density(:,:,nspin), wbo)
 
       allocate(fragment(mol%nat))
       call get_wiberg_fragment(fragment, wbo, input%thr)
